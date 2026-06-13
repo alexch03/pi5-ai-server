@@ -56,8 +56,10 @@ interactive use.
 
 ## What's intentionally NOT here
 
-- **Hailo AI HAT.** The HAT is great for vision (YOLO) but doesn't help with
-  LLM inference (no llama.cpp backend). This setup is purely CPU + Ollama.
+- **Hailo AI HAT.** The HAT (Hailo-8L on the AI HAT, Hailo-10H on the AI
+  HAT+) is great for vision (YOLO) but doesn't help with LLM inference
+  (no llama.cpp backend). This setup is purely CPU + Ollama. If you have
+  the HAT, see `install/hailo_optional/` for the side-stack.
 - **Claude Code on the Pi.** It installs fine but its system prompt is too
   large for the Pi's prefill speed — every turn takes minutes. Use it on a
   desktop and have it talk to the Pi's Ollama API instead.

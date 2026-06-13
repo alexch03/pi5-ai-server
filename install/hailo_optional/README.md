@@ -6,7 +6,8 @@
 
 ## What this is for
 
-The Hailo-8L (AI HAT / AI HAT+) is a PCIe vision accelerator: YOLOv8/n,
+The Hailo PCIe accelerators (Hailo-8L on the AI HAT, Hailo-10H on the
+AI HAT+) are vision accelerators: YOLOv8/n,
 pose estimation, depth, etc. It does **not** help with LLMs (no llama.cpp
 backend). If you only want a local chat/agent, skip this directory.
 
@@ -18,7 +19,7 @@ Use this module if you want:
 ## Hardware
 
 - Raspberry Pi 5 (any RAM tier — Hailo doesn't care)
-- Official Pi 5 AI HAT or AI HAT+ with the Hailo-8L module
+- Official Pi 5 AI HAT (Hailo-8L) or AI HAT+ (Hailo-10H) — both work
 - **PCIe FFC cable** plugged into the **J11 connector** on the Pi 5 (it's the
   small flat connector, NOT the GPIO header — getting this wrong is the #1
   reason "Hailo not detected")
