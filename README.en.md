@@ -117,11 +117,26 @@ on this setup. CPU + Ollama, full stop.
 - The mini-agent restricts `run_command` to a whitelist (`ls`, `cat`, `echo`,
   ...). File writes are confined to `~/agent-workdir` via path-escape checks.
 
+## Optional module — Hailo AI HAT
+
+If you have a Hailo-8L (AI HAT / HAT+), a **separate** module enables PCIe
+and installs the driver/runtime. It does **not** touch the LLM stack
+(Ollama stays on CPU, Hailo dedicated to vision).
+
+```bash
+cd ~/pi5-ai-server/install/hailo_optional
+bash 06_install_hailo.sh && sudo reboot
+bash test_hailo_yolo.sh
+```
+
+Details: [install/hailo_optional/README.md](install/hailo_optional/README.md).
+
 ## Documentation
 
 - [docs/overclock.en.md](docs/overclock.en.md) — OC details, measurements, rollback
 - [docs/cooling.en.md](docs/cooling.en.md) — why active cooling is mandatory
 - [docs/architecture.md](docs/architecture.md) — diagram + design rationale
+- [docs/enable_ssh.md](docs/enable_ssh.md) — enable SSH on a freshly flashed Pi
 
 ## Uninstall / rollback
 

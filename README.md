@@ -119,11 +119,26 @@ textuelle/agentique, il sert à rien sur ce setup. C'est CPU + Ollama, point.
   ...). Les écritures fichier sont confinées à `~/agent-workdir` via
   vérification de chemin.
 
+## Module optionnel — Hailo AI HAT
+
+Si tu as un Hailo-8L (AI HAT/HAT+), un module **séparé** active le PCIe et
+installe le driver/runtime. Il ne touche **pas** à la stack LLM (Ollama
+reste sur CPU, Hailo dédié à la vision).
+
+```bash
+cd ~/pi5-ai-server/install/hailo_optional
+bash 06_install_hailo.sh && sudo reboot
+bash test_hailo_yolo.sh
+```
+
+Détails : [install/hailo_optional/README.md](install/hailo_optional/README.md).
+
 ## Documentation
 
 - [docs/overclock.md](docs/overclock.md) — détails sur l'OC, mesures, rollback
 - [docs/cooling.md](docs/cooling.md) — pourquoi le cooling actif est obligatoire
 - [docs/architecture.md](docs/architecture.md) — schéma + raison de chaque choix
+- [docs/enable_ssh.md](docs/enable_ssh.md) — activer SSH sur un Pi fraîchement flashé
 
 ## Désinstallation / rollback
 
