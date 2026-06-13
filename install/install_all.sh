@@ -13,6 +13,7 @@ echo "  2. Apply a stable 3.0 GHz overclock (with backup + easy rollback)"
 echo "  3. Install Ollama and expose it on the LAN"
 echo "  4. Pull qwen3:1.7b (fast) and qwen3:4b (better quality)"
 echo "  5. Install the mini-agent (~/mini_agent.py)"
+echo "  6. Install the web UI on http://pi:8080 (chat + hardware dashboard)"
 echo
 read -rp "Continue? [y/N] " ans
 [[ "${ans,,}" == "y" ]] || { echo "Aborted."; exit 1; }
@@ -22,9 +23,12 @@ bash ./01_overclock.sh
 bash ./03_install_ollama.sh
 bash ./04_pull_models.sh
 bash ./05_install_mini_agent.sh
+bash ./06_install_web.sh
 
+IP=$(hostname -I | awk '{print $1}')
 echo
 echo "=== Done. ==="
-echo "Ollama API: http://$(hostname -I | awk '{print $1}'):11434"
+echo "Web UI    : http://$IP:8080"
+echo "Ollama API: http://$IP:11434"
 echo "Try the agent: python3 ~/mini_agent.py \"écris hello.txt avec 'hi pi'\""
 echo "Reboot is recommended for the overclock to take effect: sudo reboot"

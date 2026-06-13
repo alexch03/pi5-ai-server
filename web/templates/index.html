@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>pi5-ai-server</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <span class="logo">🥧</span>
+      <span class="name">pi5-ai-server</span>
+      <span class="ver">v0.2</span>
+    </div>
+    <div class="header-controls">
+      <label class="switch" title="Agent mode adds a system prompt for tool-aware reasoning">
+        <input type="checkbox" id="agent-mode">
+        <span class="slider"></span>
+        <span class="switch-label">Agent mode</span>
+      </label>
+      <select id="model-picker">
+        {% for m in models %}
+        <option value="{{ m }}" {% if m == default_model %}selected{% endif %}>{{ m }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </header>
+
+  <main>
+    <section class="chat" id="chat">
+      <div class="messages" id="messages">
+        <div class="msg system">
+          <div class="role">system</div>
+          <div class="content">Local LLM running on your Raspberry Pi 5. No cloud, no API keys, no telemetry leaves the LAN.</div>
+        </div>
+      </div>
+      <form class="composer" id="composer">
+        <textarea id="input" rows="2" placeholder="Ask anything… (Shift+Enter for newline)"></textarea>
+        <button type="submit" id="send" title="Send (Enter)">↗</button>
+      </form>
+    </section>
+
+    <aside class="sidebar">
+      <div class="card">
+        <div class="card-head">CPU</div>
+        <div class="row"><span class="k">Model</span><span class="v" id="pi-model">…</span></div>
+        <div class="row"><span class="k">Freq</span><span class="v" id="cpu-freq">…</span></div>
+        <div class="row"><span class="k">Temp</span><span class="v" id="cpu-temp">…</span></div>
+        <div class="row"><span class="k">Volts</span><span class="v" id="cpu-volt">…</span></div>
+        <div class="row"><span class="k">Throttle</span><span class="v" id="cpu-throttle">…</span></div>
+        <div class="row"><span class="k">Overclock</span><span class="v" id="cpu-oc">…</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">Ollama</div>
+        <div class="row"><span class="k">Service</span><span class="v" id="ollama-status">…</span></div>
+        <div class="row"><span class="k">Model</span><span class="v" id="ollama-model">…</span></div>
+        <div class="row"><span class="k">Prefill</span><span class="v" id="prefill-tps">— tok/s</span></div>
+        <div class="row"><span class="k">Decode</span><span class="v" id="decode-tps">— tok/s</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">Hailo</div>
+        <div class="row"><span class="k">PCIe</span><span class="v" id="hailo-status">…</span></div>
+        <div class="row"><span class="k">Model</span><span class="v" id="hailo-model">…</span></div>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const messages = [];
+let stats = {};
+
+async function refreshHealth() {
+  try {
+    const r = await fetch("/api/health");
+    const t = await r.json();
+    $("pi-model").textContent = t.pi_model;
+    $("cpu-freq").innerHTML = `${t.arm_freq_mhz} <span class="dim">/ ${t.arm_freq_target_mhz} MHz</span>`;
+    const tempEl = $("cpu-temp");
+    tempEl.textContent = `${t.cpu_temp_c.toFixed(1)} °C`;
+    tempEl.className = "v " + (t.cpu_temp_c > 70 ? "warn" : t.cpu_temp_c > 60 ? "soft-warn" : "ok");
+    $("cpu-volt").textContent = `${t.core_volt.toFixed(2)} V`;
+    const thr = $("cpu-throttle");
+    thr.textContent = `${t.throttled_hex} · ${t.throttled_label}`;
+    thr.className = "v " + (t.throttled_label === "healthy" ? "ok" : "warn");
+    const oc = $("cpu-oc");
+    oc.innerHTML = t.overclock_active ? '<span class="ok">● active</span>' : '<span class="dim">stock</span>';
+    const oll = $("ollama-status");
+    oll.innerHTML = t.ollama_active ? '<span class="ok">● active</span>' : '<span class="warn">● down</span>';
+    const ha = $("hailo-status");
+    ha.innerHTML = t.hailo_present ? '<span class="ok">● online</span>' : '<span class="dim">absent</span>';
+    $("hailo-model").textContent = t.hailo_model || "—";
+  } catch (e) {}
+}
+
+function modelInUse() { return $("model-picker").value; }
+function refreshOllamaModelDisplay() { $("ollama-model").textContent = modelInUse(); }
+
+function escape(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function renderMd(s) {
+  // tiny inline-only renderer: ```code```, `code`, **bold**, *italic*, lists
+  let html = escape(s);
+  html = html.replace(/```([\s\S]*?)```/g, (_, c) => `<pre><code>${c.trim()}</code></pre>`);
+  html = html.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+  html = html.replace(/\*\*([^\*]+)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/(^|\s)\*([^\*\n]+)\*/g, "$1<em>$2</em>");
+  // list items: lines starting with - or *
+  html = html.replace(/(^|\n)([-*])\s+(.+)/g, "$1<li>$3</li>");
+  html = html.replace(/(<li>[\s\S]*?<\/li>)(?!<li>)/g, "<ul>$1</ul>");
+  return html;
+}
+function pushMsg(role, content) {
+  const div = document.createElement("div");
+  div.className = "msg " + role;
+  div.innerHTML = `<div class="role">${role}</div><div class="content"></div>`;
+  div.querySelector(".content").textContent = content;
+  $("messages").appendChild(div);
+  $("messages").scrollTop = $("messages").scrollHeight;
+  return div.querySelector(".content");
+}
+
+async function send(text) {
+  if (!text.trim()) return;
+  messages.push({ role: "user", content: text });
+  pushMsg("user", text);
+  const target = pushMsg("assistant", "");
+  const cursor = document.createElement("span");
+  cursor.className = "cursor";
+  cursor.textContent = "▍";
+  target.appendChild(cursor);
+
+  const payload = {
+    model: modelInUse(),
+    agent_mode: $("agent-mode").checked,
+    messages: messages,
+  };
+
+  const r = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!r.ok) {
+    target.textContent = "Error: " + r.status;
+    return;
+  }
+  const reader = r.body.getReader();
+  const dec = new TextDecoder();
+  let buf = "";
+  let acc = "";
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let idx;
+    while ((idx = buf.indexOf("\n\n")) >= 0) {
+      const ev = buf.slice(0, idx).trim();
+      buf = buf.slice(idx + 2);
+      if (!ev.startsWith("data: ")) continue;
+      const data = JSON.parse(ev.slice(6));
+      if (data.delta) {
+        acc += data.delta;
+        cursor.remove();
+        target.innerHTML = renderMd(acc);
+        target.appendChild(cursor);
+        $("messages").scrollTop = $("messages").scrollHeight;
+      }
+      if (data.done) {
+        stats = data.stats || {};
+        if (stats.decode_tok_s) $("decode-tps").textContent = `${stats.decode_tok_s.toFixed(1)} tok/s`;
+        if (stats.prefill_tok_s) $("prefill-tps").textContent = `${stats.prefill_tok_s.toFixed(1)} tok/s`;
+        cursor.remove();
+        target.innerHTML = renderMd(acc);
+        messages.push({ role: "assistant", content: acc });
+      }
+      if (data.error) {
+        cursor.remove();
+        target.textContent = "[error] " + data.error;
+      }
+    }
+  }
+}
+
+$("composer").addEventListener("submit", e => {
+  e.preventDefault();
+  const v = $("input").value;
+  $("input").value = "";
+  send(v);
+});
+$("input").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    $("composer").requestSubmit();
+  }
+});
+$("model-picker").addEventListener("change", refreshOllamaModelDisplay);
+
+refreshHealth();
+refreshOllamaModelDisplay();
+setInterval(refreshHealth, 3000);
+</script>
+</body>
+</html>

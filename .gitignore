@@ -8,4 +8,8 @@ venv/
 .vscode/
 .DS_Store
 *.log
+*.err
 bench_results/
+web/web.log
+web/web.err
+.claude/launch.json

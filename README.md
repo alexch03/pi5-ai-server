@@ -7,24 +7,32 @@
 [![Ollama](https://img.shields.io/badge/LLM-Ollama-black.svg)](https://ollama.com)
 [![Status: validated on real hardware](https://img.shields.io/badge/status-validated-brightgreen.svg)](https://github.com/alexch03/pi5-ai-server)
 
-Transforme un Raspberry Pi 5 en serveur d'IA local et agentique, avec
-installation 1-commande, overclock stable à 3 GHz, et un mini-agent en Python
-qui appelle des outils via Ollama.
+Transforme un Raspberry Pi 5 en serveur d'IA local et agentique : installation
+**1-commande**, overclock stable à **3 GHz**, mini-agent Python avec tool-calling,
+et une **web UI** qui montre le chat **et** la santé du Pi (temp, throttle,
+Hailo) dans le même onglet.
 
-**Pas de Hailo, pas de GPU, pas de cloud.** Juste le CPU du Pi 5 + Ollama +
-qwen3. Le tout exposé sur le LAN pour que tes autres machines tapent dedans.
+**Zéro cloud, zéro clé API, zéro npm.** Tu chattes avec ton Pi depuis n'importe
+quel device du LAN.
+
+![Web UI du pi5-ai-server : chat à gauche, dashboard hardware live à droite](docs/images/hero.png)
 
 ---
 
 ## Ce que ça fait
 
+- ✅ **Web UI** sur `http://pi:8080` avec chat streaming et **sidebar live**
+  qui montre temp CPU, throttle, OC actif, modèle chargé, tok/s en cours,
+  statut Hailo. Pas de npm, pas de Docker, 50 MB de RAM.
+- ✅ **Toggle "agent mode"** : bascule chat simple ↔ système d'instructions
+  d'agent dans la même UI
 - ✅ Installe Ollama et l'expose sur le LAN (port `11434`)
 - ✅ Pull les modèles qui tournent vraiment bien sur Pi 5 (qwen3:1.7b, qwen3:4b)
 - ✅ Applique un overclock 3.0 GHz **stable et réversible** (backup automatique
   de `config.txt`, validé 60s stress-ng matrixprod sous 62°C)
 - ✅ Refuse l'overclock si ton refroidissement n'est pas adéquat
-- ✅ Installe un mini-agent (`mini_agent.py`) qui boucle sur `/api/chat` avec
-  des outils (`write_file`, `read_file`, `run_command` whitelistée)
+- ✅ Installe un mini-agent CLI (`mini_agent.py`) qui boucle sur `/api/chat`
+  avec des outils (`write_file`, `read_file`, `run_command` whitelistée)
 - ✅ Clients LAN pour tester depuis Windows/Mac/Linux (SSH, SFTP, bench)
 
 ## Pré-requis
@@ -71,7 +79,19 @@ bash install/install_all.sh
 Chaque étape est dans son propre script (`install/01_*.sh` à `install/05_*.sh`),
 tu peux les lancer indépendamment.
 
-## Tester l'agent
+## Tester le chat (web UI)
+
+Sur ton téléphone ou ton laptop, ouvre `http://<ip-de-ton-pi>:8080`. Tu as :
+
+| Sidebar live (rafraîchie toutes les 3s)                     |
+|--------------------------------------------------------------|
+| ![Sidebar du dashboard hardware](docs/images/sidebar.png)   |
+
+Active le toggle "Agent mode" en haut à droite pour basculer en mode agentique.
+
+![Toggle Agent mode + conversation multi-tour](docs/images/agent-mode.png)
+
+## Tester le mini-agent CLI
 
 Depuis le Pi (SSH) :
 

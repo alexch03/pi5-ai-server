@@ -7,22 +7,30 @@
 [![Ollama](https://img.shields.io/badge/LLM-Ollama-black.svg)](https://ollama.com)
 [![Status: validated on real hardware](https://img.shields.io/badge/status-validated-brightgreen.svg)](https://github.com/alexch03/pi5-ai-server)
 
-Turn a Raspberry Pi 5 into a local agentic AI server with one-command install,
-a stable 3 GHz overclock, and a Python mini-agent that calls tools via Ollama.
+Turn a Raspberry Pi 5 into a local agentic AI server: **one-command install**,
+stable **3 GHz** overclock, Python mini-agent with tool-calling, and a
+**web UI** that shows your chat **and** the Pi's health (temp, throttle,
+Hailo) in the same browser tab.
 
-**No Hailo, no GPU, no cloud.** Just the Pi 5 CPU + Ollama + qwen3, exposed on
-the LAN so your other machines can hit it.
+**No cloud, no API keys, no npm.** Chat with your Pi from any LAN device.
+
+![pi5-ai-server web UI: streaming chat on the left, live hardware dashboard on the right](docs/images/hero.png)
 
 ---
 
 ## What it does
 
+- ✅ **Web UI** at `http://pi:8080` with streaming chat and a **live sidebar**
+  showing CPU temp, throttle, OC state, current model, tok/s, Hailo status.
+  No npm, no Docker, ~50 MB RAM.
+- ✅ **"Agent mode" toggle**: switch between plain chat and agent system
+  prompting in the same UI
 - ✅ Installs Ollama and exposes it on the LAN (port `11434`)
 - ✅ Pulls the models that actually run well on a Pi 5 (qwen3:1.7b, qwen3:4b)
 - ✅ Applies a **stable, reversible** 3.0 GHz overclock (automatic backup of
   `config.txt`, validated with 60s stress-ng matrixprod under 62°C)
 - ✅ Refuses to overclock if your cooling isn't adequate
-- ✅ Installs a mini-agent (`mini_agent.py`) that loops on `/api/chat` with
+- ✅ Installs a CLI mini-agent (`mini_agent.py`) that loops on `/api/chat` with
   tools (`write_file`, `read_file`, whitelisted `run_command`)
 - ✅ LAN clients to test from Windows/Mac/Linux (SSH, SFTP, bench)
 
@@ -70,7 +78,19 @@ bash install/install_all.sh
 Each step is its own script (`install/01_*.sh` to `install/05_*.sh`), runnable
 independently.
 
-## Try the agent
+## Try the chat (web UI)
+
+On your phone or laptop, open `http://<your-pi-ip>:8080`. You get:
+
+| Live sidebar (refreshed every 3s)                              |
+|-----------------------------------------------------------------|
+| ![Hardware dashboard sidebar](docs/images/sidebar.png)         |
+
+Toggle "Agent mode" in the top-right to flip into agentic system prompting.
+
+![Agent mode toggle + multi-turn conversation](docs/images/agent-mode.png)
+
+## Try the CLI mini-agent
 
 From the Pi (SSH):
 
