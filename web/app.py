@@ -40,8 +40,7 @@ async def _ollama_models() -> list[str]:
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     models = await _ollama_models()
-    return templates.TemplateResponse("index.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "index.html", {
         "models": models or ["qwen3:1.7b", "qwen3:4b"],
         "default_model": "qwen3:1.7b" if "qwen3:1.7b" in models else (models[0] if models else "qwen3:1.7b"),
     })
