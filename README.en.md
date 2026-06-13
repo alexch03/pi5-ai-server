@@ -2,6 +2,11 @@
 
 > [🇫🇷 Version française](README.md)
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Platform: Raspberry Pi 5](https://img.shields.io/badge/Platform-Raspberry%20Pi%205-c51a4a.svg)](https://www.raspberrypi.com/products/raspberry-pi-5/)
+[![Ollama](https://img.shields.io/badge/LLM-Ollama-black.svg)](https://ollama.com)
+[![Status: validated on real hardware](https://img.shields.io/badge/status-validated-brightgreen.svg)](https://github.com/alexch03/pi5-ai-server)
+
 Turn a Raspberry Pi 5 into a local agentic AI server with one-command install,
 a stable 3 GHz overclock, and a Python mini-agent that calls tools via Ollama.
 
